@@ -8,6 +8,7 @@
   };
 
   MailCatcher = (function() {
+    var watchlist;
 
     function MailCatcher() {
       var _this = this;
@@ -151,9 +152,12 @@
         }
         return false;
       });
+      this.getWatchlist();
       this.refresh();
       this.subscribe();
     }
+
+    watchlist = [];
 
     MailCatcher.prototype.parseDateRegexp = /^(\d{4})[-\/\\](\d{2})[-\/\\](\d{2})(?:\s+|T)(\d{2})[:-](\d{2})[:-](\d{2})(?:([ +-]\d{2}:\d{2}|\s*\S+|Z?))?$/;
 
@@ -258,6 +262,9 @@
     };
 
     MailCatcher.prototype.addMessage = function(message) {
+      if (watchlist.length > 0 && $.inArray(message.sender, watchlist) < 0) {
+        return;
+      }
       return $('#messages tbody').prepend($('<tr />').attr('data-message-id', message.id.toString()).append($('<td/>').text(message.sender || "No sender").toggleClass("blank", !message.sender)).append($('<td/>').text((message.recipients || []).join(', ') || "No receipients").toggleClass("blank", !message.recipients.length)).append($('<td/>').text(message.subject || "No subject").toggleClass("blank", !message.subject)).append($('<td/>').text(this.formatDate(message.created_at))));
     };
 
@@ -376,6 +383,13 @@
       } else {
         return this.subscribePoll();
       }
+    };
+
+    MailCatcher.prototype.getWatchlist = function() {
+      var _this = this;
+      return $.getJSON('/mylist', function(emillist) {
+        return watchlist = emillist;
+      });
     };
 
     MailCatcher.prototype.subscribeWebSocket = function() {

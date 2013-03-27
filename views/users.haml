@@ -1,0 +1,33 @@
+!!!
+%html
+  %head
+    %title User Management
+    %link{:rel => "stylesheet", :href => "/stylesheets/custom.css"}
+    %link{:href => "/favicon.ico", :rel => "shortcut icon" }
+    %script{:src => "/javascripts/jquery.js"}
+  %body
+    %h2 User list
+    %form{:action => "/users",:method =>"post"}
+      %label{:for => "username"} Username:
+      %input{:type => "text",:name => "username"}
+      %label{:for => "password"} Password:
+      %input{:type => "password",:name => "password" }
+      %button Add User
+      %a{:href => "/"} Go back to Home 
+    %table.gridtable
+      %thead 
+        %tr 
+          %th User Name
+          %th Operation
+      
+      -@users.each do |user|
+        %tr
+          %td= user["name"]
+          %td
+            %span 
+              %form{:action => "/users/#{user["id"]}",:method => "post"}
+                %a{:href => "/users/#{user["id"]}/edit"} Edit |
+                %input{:type => "hidden", :name =>"_method", :value => "delete" }
+                -if user["name"] != "admin" 
+                  %a{:href => "#", :onclick => "$(this).closest('form').submit()" } Delete
+               

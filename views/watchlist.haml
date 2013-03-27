@@ -1,0 +1,27 @@
+!!!
+%html
+  %head
+    %title My Watch List
+    %link{:rel => "stylesheet", :href => "/stylesheets/custom.css"}
+    %link{:href => "/favicon.ico", :rel => "shortcut icon" }
+    %script{:src => "/javascripts/jquery.js"}
+  %body
+    %h2 Email list
+    %form{:action => "/watchlist",:method =>"post"}
+      %label{:for => "email"} Email:
+      %input{:type => "text",:name => "email"}
+      %button Add Email
+      %a{:href => "/"} Go back to Home 
+    %table.gridtable
+      %thead 
+        %tr 
+          %th Email
+          %th Operation
+      -@emails.each do |email|
+        %tr
+          %td= email["email_address"]
+          %td
+            %form{:action => "/watchlist/#{email["id"]}",:method => "post"}
+              %input{:type => "hidden", :name =>"_method", :value => "delete" }
+              %a{:href => "#", :onclick => "$(this).closest('form').submit()" } Delete
+               

@@ -1,0 +1,13 @@
+!!!
+%html
+  %head
+    %title User Edit
+    / %link{:rel => "stylesheet", :href => "/stylesheets/application.css"}
+    %link{:href => "/favicon.ico", :rel => "shortcut icon" }
+  %body
+    %h2= "UserName:#{ @edit_user["name"]}"
+    %form{:action => "/users/#{@edit_user['id']}",:method =>"post"}
+      %input{:type => "hidden",:name =>"_method",:value => "put"}/ 
+      %label{:for => "password"} Password 
+      %input{:type => "password",:name => "password" }
+      %button ChangePassword

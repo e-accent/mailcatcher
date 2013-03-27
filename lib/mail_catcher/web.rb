@@ -9,9 +9,115 @@ class Sinatra::Request
   include Skinny::Helpers
 end
 
+
+
 class MailCatcher::Web < Sinatra::Base
   set :root, File.expand_path("#{__FILE__}/../../..")
   set :haml, :format => :html5
+
+  enable :method_override
+  enable :sessions
+  
+  helpers do
+    def login?
+      if session[:user]
+        return true
+      else
+        return false
+      end
+    end
+
+    def current_user
+      @current_user ||= MailCatcher::User.get_user(session[:user]) if session[:user]
+    end
+
+    def admin?
+      current_user["name"] == "admin"
+    end
+
+  end
+
+  before  do
+      pass if request.path_info == '/login' || request.websocket?
+      
+      unless login?
+        session[:goto] = request.path_info
+        redirect '/login'
+      end
+  end
+
+  before '/users*' do
+    unless admin?
+      redirect '/'
+    end
+  end
+
+  get '/login' do
+    haml :login
+  end
+
+  post '/login' do
+    uid = MailCatcher::User.authorize(params[:username],params[:password])
+    if uid
+      session[:user] = uid
+      redirect '/'
+    else
+      haml :login
+    end
+  end
+
+  get '/logout' do
+    session[:user] = nil
+    redirect '/'
+  end
+
+
+  get '/users' do
+    @users = MailCatcher::User.get_user_list
+    haml :users
+  end
+
+  get '/users/:user_id/edit' do
+    @edit_user = MailCatcher::User.get_user(params[:user_id])
+    haml :edit_user
+  end
+
+  post '/users' do
+    MailCatcher::User.add_user(params[:username],params[:password])
+    redirect '/users'
+  end
+
+  put '/users/:user_id' do
+    MailCatcher::User.update_user(params[:user_id],params[:password])
+    redirect '/users'
+  end
+
+  delete '/users/:user_id' do
+    MailCatcher::User.delete_user(params[:user_id])
+    redirect '/users'
+  end
+
+  get '/watchlist' do
+    @emails = MailCatcher::User.get_watch_list(current_user["id"])
+    haml :watchlist
+  end
+
+  get '/mylist' do
+    MailCatcher::User.get_watch_list(current_user["id"]).map { |e| "<#{e['email_address']}>" }.to_json
+  end
+
+  post '/watchlist' do
+    MailCatcher::User.add_watch_email(current_user["id"],params[:email])
+    redirect '/watchlist'
+  end
+
+  delete '/watchlist/:watch_id' do
+    MailCatcher::User.delete_watch_email(params[:watch_id])
+    redirect "/watchlist"
+  end
+
+
+# ---line
 
   get '/' do
     haml :index
@@ -32,7 +138,7 @@ class MailCatcher::Web < Sinatra::Base
           end
         end)
     else
-      MailCatcher::Mail.messages.to_json
+      MailCatcher::Mail.messages(current_user["id"]).to_json
     end
   end
 

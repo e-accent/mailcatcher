@@ -68,8 +68,19 @@ module MailCatcher::Mail extend self
     @latest_created_at_query.execute.next
   end
 
-  def messages
-    @messages_query ||= db.prepare "SELECT id, sender, recipients, subject, size, created_at FROM message ORDER BY created_at DESC"
+  def messages(user_id)
+
+    scope_list = MailCatcher::User.get_watch_list(user_id).map { |e| "'<#{e['email_address']}>'" }
+    query_sql = "SELECT id, sender, recipients, subject, size, created_at FROM message ORDER BY created_at DESC"
+    scope_string =""
+    
+    if scope_list.length > 0
+      scope_string = scope_list.join(',')
+      query_sql = "SELECT id, sender, recipients, subject, size, created_at FROM message where sender in (#{scope_string}) ORDER BY created_at DESC"
+    end
+
+
+    @messages_query ||= db.prepare query_sql
     @messages_query.execute.map do |row|
       Hash[row.fields.zip(row)].tap do |message|
         message["recipients"] &&= ActiveSupport::JSON.decode message["recipients"]
