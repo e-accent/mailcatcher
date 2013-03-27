@@ -1,8 +1,8 @@
 #MailCatcher with Simple Authorization
 
-I add a simple authoriztion to MailCather,everyone loged in the MailCather can have watchlist to filter sender.
+I add some simple authoriztion to MailCather,everyone loged in the MailCather can have a watchlist to filter senders.
 
-It's create a sqlite3 dbfile in "~/.mail_db/user.db" default to persist the watchlist and user data.
+It's create a sqlite3 dbfile in "~/.mail_db/user.db" default to persist the  user data.
 
 
 # MailCatcher
