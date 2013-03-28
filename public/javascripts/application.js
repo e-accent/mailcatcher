@@ -8,7 +8,6 @@
   };
 
   MailCatcher = (function() {
-    var watchlist;
 
     function MailCatcher() {
       var _this = this;
@@ -157,7 +156,7 @@
       this.subscribe();
     }
 
-    watchlist = [];
+    MailCatcher.prototype.watchlist = [];
 
     MailCatcher.prototype.parseDateRegexp = /^(\d{4})[-\/\\](\d{2})[-\/\\](\d{2})(?:\s+|T)(\d{2})[:-](\d{2})[:-](\d{2})(?:([ +-]\d{2}:\d{2}|\s*\S+|Z?))?$/;
 
@@ -261,8 +260,24 @@
       return $('#messages tbody tr').show();
     };
 
+    MailCatcher.prototype.watchMessage = function(message) {
+      var recipients, watchlist;
+      if (this.watchlist.length === 0) {
+        return false;
+      }
+      watchlist = this.watchlist;
+      recipients = $.grep(message.recipients, function(r) {
+        var addresses;
+        addresses = $.grep(watchlist, function(addr) {
+          return r.indexOf(addr) > -1;
+        });
+        return addresses.length > 0;
+      });
+      return recipients.length > 0;
+    };
+
     MailCatcher.prototype.addMessage = function(message) {
-      if (watchlist.length > 0 && $.inArray(message.sender, watchlist) < 0) {
+      if (!this.watchMessage(message)) {
         return;
       }
       return $('#messages tbody').prepend($('<tr />').attr('data-message-id', message.id.toString()).append($('<td/>').text(message.sender || "No sender").toggleClass("blank", !message.sender)).append($('<td/>').text((message.recipients || []).join(', ') || "No receipients").toggleClass("blank", !message.recipients.length)).append($('<td/>').text(message.subject || "No subject").toggleClass("blank", !message.subject)).append($('<td/>').text(this.formatDate(message.created_at))));
@@ -388,7 +403,7 @@
     MailCatcher.prototype.getWatchlist = function() {
       var _this = this;
       return $.getJSON('/mylist', function(emillist) {
-        return watchlist = emillist;
+        return _this.watchlist = emillist;
       });
     };
 

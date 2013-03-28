@@ -17,7 +17,7 @@ class MailCatcher::Web < Sinatra::Base
 
   enable :method_override
   enable :sessions
-  
+
   helpers do
     def login?
       if session[:user]
@@ -39,7 +39,7 @@ class MailCatcher::Web < Sinatra::Base
 
   before  do
       pass if request.path_info == '/login' || request.websocket?
-      
+
       unless login?
         session[:goto] = request.path_info
         redirect '/login'
@@ -103,7 +103,7 @@ class MailCatcher::Web < Sinatra::Base
   end
 
   get '/mylist' do
-    MailCatcher::User.get_watch_list(current_user["id"]).map { |e| "<#{e['email_address']}>" }.to_json
+    MailCatcher::User.get_watch_list(current_user["id"]).map { |e| e['email_address'] }.to_json
   end
 
   post '/watchlist' do

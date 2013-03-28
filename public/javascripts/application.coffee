@@ -3,7 +3,7 @@ jQuery.expr[':'].icontains = (a, i, m) ->
   (a.textContent ? a.innerText ? "").toUpperCase().indexOf(m[3].toUpperCase()) >= 0
 
 class MailCatcher
-  
+
   constructor: ->
     $('#messages tr').live 'click', (e) =>
       e.preventDefault()
@@ -112,7 +112,8 @@ class MailCatcher
 
 
 
-  watchlist = [];
+  watchlist: []
+
   # Only here because Safari's Date parsing *sucks*
   # We throw away the timezone, but you could use it for something...
   parseDateRegexp: /^(\d{4})[-\/\\](\d{2})[-\/\\](\d{2})(?:\s+|T)(\d{2})[:-](\d{2})[:-](\d{2})(?:([ +-]\d{2}:\d{2}|\s*\S+|Z?))?$/
@@ -177,9 +178,17 @@ class MailCatcher
   clearSearch: ->
     $('#messages tbody tr').show()
 
+  watchMessage: (message) ->
+    return false if @watchlist.length == 0
+    watchlist = @watchlist
+    recipients = $.grep message.recipients, (r) ->
+      addresses = $.grep watchlist, (addr) ->
+        r.indexOf(addr) > -1
+      return addresses.length > 0
+    return recipients.length > 0
+
   addMessage: (message) ->
-    if watchlist.length >0 && $.inArray(message.sender,watchlist) < 0
-      return
+    return unless @watchMessage(message)
     $('#messages tbody').prepend \
       $('<tr />').attr('data-message-id', message.id.toString())
         .append($('<td/>').text(message.sender or "No sender").toggleClass("blank", !message.sender))
@@ -306,7 +315,7 @@ class MailCatcher
 
   getWatchlist: ->
     $.getJSON '/mylist',(emillist) =>
-      watchlist = emillist
+      @watchlist = emillist
 
   subscribeWebSocket: ->
     secure = window.location.scheme == 'https'

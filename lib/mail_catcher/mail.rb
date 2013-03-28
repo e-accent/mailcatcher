@@ -69,23 +69,21 @@ module MailCatcher::Mail extend self
   end
 
   def messages(user_id)
-
-    scope_list = MailCatcher::User.get_watch_list(user_id).map { |e| "'<#{e['email_address']}>'" }
+    addresses = MailCatcher::User.get_watch_list(user_id).map { |e| e['email_address'] }
     query_sql = "SELECT id, sender, recipients, subject, size, created_at FROM message ORDER BY created_at DESC"
-    scope_string =""
-    
-    if scope_list.length > 0
-      scope_string = scope_list.join(',')
-      query_sql = "SELECT id, sender, recipients, subject, size, created_at FROM message where sender in (#{scope_string}) ORDER BY created_at DESC"
-    end
-
 
     @messages_query ||= db.prepare query_sql
-    @messages_query.execute.map do |row|
+    rows = @messages_query.execute.select do |row|
+      addresses.any? { |addr| row[2].include?(addr) }
+    end
+    puts "rows: #{rows.inspect}"
+    msgs = rows.map do |row|
       Hash[row.fields.zip(row)].tap do |message|
         message["recipients"] &&= ActiveSupport::JSON.decode message["recipients"]
       end
     end
+    puts "msgs: #{msgs.inspect}"
+    msgs
   end
 
   def message(id)
