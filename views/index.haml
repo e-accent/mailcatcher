@@ -20,16 +20,17 @@
           %li.search
             %input{:type => 'search', :name => 'search', :placeholder => 'Search messages...', :incremental => true}
           -if admin?
-            %li 
+            %li
               %a{:href => "/users"} Users
-          %li 
-            %a{:href => "/watchlist"} WatchList 
-          %li 
+          %li
+            %a{:href => "/watchlist"} WatchList
+          %li
             %a{:href => "logout", :title => "Log out"} LogOut
           %li.clear
             %a{:href => '#', :title => 'Clear all messages'} Clear
-          %li.quit
-            %a{:href => '#', :title => 'Quit MailCatcher'} Quit
+          -if admin?
+            %li.quit
+              %a{:href => '#', :title => 'Quit MailCatcher'} Quit
     %nav#messages
       %table
         %thead
